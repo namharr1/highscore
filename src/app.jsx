@@ -1,56 +1,113 @@
-import React from 'react'
-import { MTRow, MTColumn } from 'mt-ui'
+import React, { useState } from 'react'
 import ExcelDropzone from './excel-dropzone.jsx'
+import { Grid, Card, CardContent } from "@material-ui/core";
 
-export default class Main extends React.Component {
-  handleSheetData (data) {
-    // replace this log with actual handling of the data
-    console.log(data)
+import HighScoreTable from './components/highScoreTable';
+import NewUserForm from './components/newUserForm';
+import SelectedUserTable from './components/selectedUserTable';
+import { getNewUserId, getUserByName, getHighScores, getAllScoresForOneUser } from './utils/general';
+import { sortNumbersDescending } from './utils/sorter';
+import {default as initialScores} from './scores';
+import {default as initialUsers} from './users';
+
+function App() {
+  const [users, setUsers] = useState(initialUsers);
+  const [scores, setScores] = useState(initialScores);
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const handleSheetData = (data) => {
+    const allCurrentUsers = [...users];
+
+    const _scores = data.map(u => {
+      const user = allCurrentUsers.find(user => user.name.toLowerCase() === u.name.toLowerCase())
+      if (!user) {
+        const userId = getNewUserId();
+
+        allCurrentUsers.push({_id: userId, name: u.name});
+
+        return {
+          userId,
+          score: u.score
+        }
+      }
+  
+      return {
+        userId: user._id,
+        score: u.score
+      }
+    })
+
+    setUsers(allCurrentUsers);
+    setScores(state => [...state, ..._scores]);
   }
 
-  render () {
-    return (
-      <div className="container container--centered">
-        <h1 className="m-t">Mediatool exercise</h1>
-        <MTRow>
-          <MTColumn width={ 20 }>
-            <ExcelDropzone
-              onSheetDrop={ this.handleSheetData }
-              label="Drop your file here"
-            />
-          </MTColumn>
-          <MTColumn width={ 75 } offset={ 5 }>
-            <div>
-              <h2>Initial site</h2>
-              <p>
-                Drop the excel file scores.xlsx that you will find
-                in this repo in the area to the left and watch the log output in the console.
-                We hope this is enough to get you started with the import.
-              </p>
-            </div>
-            <div>
-              <h2>Explaining the grid</h2>
-              <p>
-                In the Mediatool grid you can use MTRow and MTColumn
-                to structure your graphical components.
-                This is basically what you need to know:
-              </p>
-              <ul>
-                <li>
-                  The index.jsx file uses these components so you
-                  can see an example of how they work
-                </li>
-                <li>MTRow will always create a line break</li>
-                <li>
-                  MTColumns will stretch to the width of the entire row,
-                  unless you use the properties width and offset
-                </li>
-                <li>Width and offset is set in percent</li>
-              </ul>
-            </div>
-          </MTColumn>
-        </MTRow>
-      </div>
+  const addNewUserByForm = (user) => {
+    const savedUser = getUserByName(user.name, users);
+
+    if (!savedUser) {
+      const newId = getNewUserId();
+      const newUser = {
+        _id: newId,
+        name: user.name
+      }
+      
+      const newScore = {
+        userId: newId,
+        score: user.score
+      }
+
+      setUsers(users => [...users, newUser]);
+      setScores(scores => [...scores, newScore]);
+
+    } else {
+      const newScore = {
+        userId: savedUser._id,
+        score: user.score
+      }
+
+      setScores(scores => [...scores, newScore]);
+    }
+  }
+
+  const formatSelectedUser = () => {
+    return  {
+      name: selectedUser.name,
+      _id: selectedUser._id,
+      userScores: sortNumbersDescending(getAllScoresForOneUser(selectedUser._id, scores)),
+    }
+  }
+
+  return (
+    <Grid container>
+      <Card>
+        <CardContent>
+            <Grid container>
+                <Grid item sm={12}>
+                  <h2>Mediatool exercise</h2>
+                </Grid>
+                <Grid item sm={6}>
+                  <ExcelDropzone
+                    onSheetDrop={ handleSheetData }
+                    label="Drop your file here"
+                  />
+                </Grid>
+                <Grid item sm={6}>
+                  <NewUserForm submitNewUser={addNewUserByForm} />
+                </Grid>
+                <Grid item sm={12}>
+                  <h2>Highscores</h2>
+                </Grid>
+                <Grid item sm={6}>
+                  <HighScoreTable userHighScores={getHighScores(users, scores)} selectUser={setSelectedUser}/>
+                </Grid>
+                <Grid item sm={6}>
+                  {selectedUser && (<SelectedUserTable user={formatSelectedUser()}/>)}
+                </Grid>
+            </Grid>
+        </CardContent>
+      </Card>
+    </Grid>
     )
-  }
 }
+
+export default App;
