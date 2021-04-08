@@ -1,8 +1,13 @@
 import React from "react";
 import { Grid,Table, TableHead, TableBody, TableCell, TableRow } from "@material-ui/core";
+import { sortByScoreDesc } from "../utils/sorter";
+import { getHighScores, arrayToMap } from "../utils/general";
 
-const highScoreTable = ( {selectUser, userHighScores} ) => {
- 
+const highScoreTable = ( {selectUser, scores, users} ) => {
+    const usersMap = arrayToMap('_id', users);
+    const highScores = getHighScores(scores);
+    const sortedScores = sortByScoreDesc(highScores);
+
     const highScoreTableRows = [
         { valueName: "name"},
         { valueName: "score"},
@@ -24,16 +29,17 @@ const highScoreTable = ( {selectUser, userHighScores} ) => {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {userHighScores.map((user) => {
-                            return(
+                        {sortedScores.map(({ userId, score }) => {
+                            const user = usersMap[userId];
+                            return (
                                 <TableRow 
-                                    key={user._id} 
-                                    onClick={() => selectUser(user)}>
+                                    key={userId}
+                                    onClick={() => selectUser({_id: user._id, name: user.name})}>
                                     <TableCell>{user.name}</TableCell>
-                                    <TableCell>{user.score}</TableCell>
+                                    <TableCell>{score}</TableCell>
                                 </TableRow>
-                            );
-                        })}
+                            )
+                        })} 
                     </TableBody>
                 </Table>
             </Grid>

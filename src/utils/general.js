@@ -1,4 +1,4 @@
-import { getHighestNumber } from './sorter';
+import { sortByScoreDesc } from './sorter';
 
 export const getNewUserId = () => {
     return Math.random().toString(36).toString(2, 9);
@@ -8,22 +8,32 @@ export const getUserByName = (name, users) => {
     return users.find(e => e.name.toLowerCase() === name.toLowerCase());
 }
 
-export const getAllScoresForOneUser = (id, scores) => {
-    const user = scores.filter((e) => e.userId === id);
-    
-    const userScore = user.map(s => {
-        return s.score;
-    });
-
-    return userScore;
+export const arrayToMap = (prop, array) => {
+    return array.reduce((acc, curr) => {
+      acc[curr[prop]] = curr
+      return acc
+    }, {})
 }
 
-export const getHighScores = (users, highscores) => {
-    const highScoresResult = users.map(user => {
-        const playerAllScores = getAllScoresForOneUser(user._id, highscores);
+export const getAllScoresForOneUser = (id, scores) => {
+    const userScores = scores.filter((e) => e.userId === id);
+    return sortByScoreDesc(userScores);
+}
+
+export const getHighScores = (highscores) => {
+    const reducedScores = highscores.reduce((acc, { userId, score }) => {
+        const userScore = acc[userId]
         
-        const highestScore = getHighestNumber(playerAllScores);
-        return {_id: user._id, name: user.name, score: highestScore};
-    });
-    return highScoresResult.sort(function(a, b){return b.score - a.score});
- }
+        if (!userScore) {
+            acc[userId] = score
+        }
+
+        if (userScore < score) {
+            acc[userId] = score
+        }
+
+        return acc
+    }, {})
+    
+    return Object.entries(reducedScores).map(([ userId, score ]) => ({ userId, score }))
+}

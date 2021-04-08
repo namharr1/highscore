@@ -6,33 +6,33 @@ const selectedUserTable = ( { user} ) => {
 
     return(
         <Grid container alignContent="center">
-        <Grid item xs={12} sm={6}>
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        {selectedUserTableRows.map(col =>
-                            <TableCell
-                                key={col.valueName}
-                            >
-                                {col.valueName}
-                            </TableCell>    
-                        )}
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {user.userScores.map((score, index) => {
-                        return(
-                            <TableRow 
-                                key={index} 
-                               >
-                                <TableCell>{score}</TableCell>
-                            </TableRow>
-                        );
-                    })}
-                </TableBody>
-            </Table>
+            <Grid item xs={12} sm={6}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            {selectedUserTableRows.map(col =>
+                                <TableCell
+                                    key={col.valueName}
+                                >
+                                    {col.valueName}
+                                </TableCell>    
+                            )}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {user.userScores.map(({score}, index) => {
+                            return(
+                                <TableRow 
+                                    key={index} 
+                                >
+                                    <TableCell>{score}</TableCell>
+                                </TableRow>
+                            );
+                        })}
+                    </TableBody>
+                </Table>
+            </Grid>
         </Grid>
-    </Grid>
     );
 }
 
